@@ -21,6 +21,8 @@
 #ifndef PHP_RSVG_H
 #define PHP_RSVG_H
 
+#define PHP_RSVG_VERSION "0.1.0-alpha"
+
 extern zend_module_entry rsvg_module_entry;
 #define phpext_rsvg_ptr &rsvg_module_entry
 

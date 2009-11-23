@@ -39,11 +39,15 @@ PHP_METHOD(RsvgHandle, __construct)
 	long data_len;
 	GError *error = NULL;
 	
+	PHP_RSVG_ERROR_HANDLING(TRUE)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(TRUE)
 		return;
 	}
 
+	PHP_RSVG_RESTORE_ERRORS(TRUE)
 	if(data_len == 0) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "No SVG data supplied", 0 TSRMLS_CC);
 		return;
 	}
 
@@ -52,14 +56,13 @@ PHP_METHOD(RsvgHandle, __construct)
 	handle_object->handle = rsvg_handle_new_from_data(data, data_len, &error);
 
 	if(error != NULL) {
-		zend_throw_exception(rsvg_ce_rsvgexception, error->message, 0 TSRMLS_CC);
+		zend_throw_exception(rsvg_ce_rsvgexception, error->message, error->code TSRMLS_CC);
 		g_error_free(error);
 		return;
 	}
 
 	if(handle_object->handle == NULL) {
 		zend_throw_exception(rsvg_ce_rsvgexception, "Could not create the RSVG object", 0 TSRMLS_CC);
-		g_error_free(error);
 		return;
 	}
 

@@ -52,7 +52,7 @@ zend_module_entry rsvg_module_entry = {
 	NULL,
 	PHP_MINFO(rsvg),
 #if ZEND_MODULE_API_NO >= 20010901
-	"0.1", /* Replace with version number for your extension */
+	PHP_RSVG_VERSION,
 #endif
 	STANDARD_MODULE_PROPERTIES
 };
