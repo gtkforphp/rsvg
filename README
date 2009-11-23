@@ -1,0 +1,8 @@
+This is the start of a librsvg wrapper for PHP. It lets you render SVG
+images using librsvg onto Cairo surfaces (to begin with) and then write
+those to PNG, PDF, PS, or even SVG if you're a little mad.
+
+Requires: 
+* PHP 5.2.x or greater
+* librsvg 1.14
+* PECL/Cairo
