@@ -33,7 +33,7 @@ PHP_RSVG_API zend_class_entry* php_rsvg_get_handle_ce() {
        Create a new RsvgHandle object from SVG data */
 PHP_METHOD(RsvgHandle, __construct)
 {
-	rsvg_handle_object *handle_object;
+	rsvg_handle_object *handle_object = NULL;
 	zval *data_zval = NULL;
 	const char *data;
 	long data_len;
@@ -47,14 +47,22 @@ PHP_METHOD(RsvgHandle, __construct)
 		return;
 	}
 
-	object_init_ex(return_value, rsvg_ce_rsvghandle);
-	handle_object = (rsvg_handle_object *)zend_object_store_get_object(return_value TSRMLS_CC);
+	handle_object = (rsvg_handle_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+	rsvg_init();
 	handle_object->handle = rsvg_handle_new_from_data(data, data_len, &error);
+
 	if(error != NULL) {
 		zend_throw_exception(rsvg_ce_rsvgexception, error->message, 0 TSRMLS_CC);
 		g_error_free(error);
 		return;
 	}
+
+	if(handle_object->handle == NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "Could not create the RSVG object", 0 TSRMLS_CC);
+		g_error_free(error);
+		return;
+	}
+
 }
 
 /* }}} */
@@ -67,10 +75,10 @@ PHP_FUNCTION(rsvg_handle_render_cairo)
 	zval *handle_zval, *context_zval;
 	rsvg_handle_object *handle_object;
 	cairo_context_object *context_object;
-	zend_class_entry *cairocontext_ce;
+	zend_class_entry *cairo_ce_cairocontext;
 	int result;
 
-	cairocontext_ce = php_cairo_get_context_ce();
+	cairo_ce_cairocontext = php_cairo_get_context_ce();
 	PHP_RSVG_ERROR_HANDLING(FALSE)
 	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OO", &handle_zval, rsvg_ce_rsvghandle, &context_zval, cairo_ce_cairocontext) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(FALSE)
@@ -81,7 +89,7 @@ PHP_FUNCTION(rsvg_handle_render_cairo)
 	handle_object = (rsvg_handle_object *)zend_object_store_get_object(handle_zval TSRMLS_CC);
 	context_object = (cairo_context_object *)zend_object_store_get_object(context_zval TSRMLS_CC);
 
-	result = rsvg_handle_render_cairo(handle_object->handle, cairo_context->context);
+	result = rsvg_handle_render_cairo(handle_object->handle, context_object->context);
 	RETURN_BOOL(result);
 }
 

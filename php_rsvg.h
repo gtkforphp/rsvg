@@ -24,10 +24,9 @@
 extern zend_module_entry rsvg_module_entry;
 #define phpext_rsvg_ptr &rsvg_module_entry
 
-typedef struct _rsvg_handle_object {
-	zend_object *std;
-	RsvgHandle *handle;
-} rsvg_handle_object;
+extern zend_object_handlers rsvg_std_object_handlers;
+
+zend_class_entry *rsvg_ce_rsvgexception;
 
 #ifdef PHP_WIN32
 #	define PHP_RSVG_API __declspec(dllexport)
@@ -44,6 +43,13 @@ typedef struct _rsvg_handle_object {
 #include <glib.h>
 #include <librsvg/rsvg.h>
 #include <librsvg/rsvg-cairo.h>
+#include "php_cairo_api.h"
+
+typedef struct _rsvg_handle_object {
+	zend_object std;
+	RsvgHandle *handle;
+} rsvg_handle_object;
+
 
 PHP_MINIT_FUNCTION(rsvg);
 PHP_MSHUTDOWN_FUNCTION(rsvg);

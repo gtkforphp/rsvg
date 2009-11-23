@@ -53,7 +53,7 @@ if test "$PHP_RSVG" != "no"; then
         AC_MSG_RESULT(found)
         AC_MSG_CHECKING(for rsvg)
     
-        if $PKG_CONFIG --exists rsvg; then
+        if $PKG_CONFIG --exists librsvg-2.0; then
             if $PKG_CONFIG --atleast-version=1.14 librsvg-2.0; then
                 rsvg_version_full=`$PKG_CONFIG --modversion librsvg-2.0`
                 AC_MSG_RESULT([found $rsvg_version_full])

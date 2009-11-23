@@ -27,6 +27,8 @@
 #include "ext/standard/info.h"
 #include "php_rsvg.h"
 
+zend_object_handlers rsvg_std_object_handlers;
+
 /* {{{ rsvg_functions[]
  *
  * Every user visible function must have an entry in rsvg_functions[].
@@ -60,31 +62,17 @@ zend_module_entry rsvg_module_entry = {
 ZEND_GET_MODULE(rsvg)
 #endif
 
-/* {{{ PHP_INI
- */
-/* Remove comments and fill if you need to have entries in php.ini
-PHP_INI_BEGIN()
-    STD_PHP_INI_ENTRY("rsvg.global_value",      "42", PHP_INI_ALL, OnUpdateLong, global_value, zend_rsvg_globals, rsvg_globals)
-    STD_PHP_INI_ENTRY("rsvg.global_string", "foobar", PHP_INI_ALL, OnUpdateString, global_string, zend_rsvg_globals, rsvg_globals)
-PHP_INI_END()
-*/
-/* }}} */
-
-/* {{{ php_rsvg_init_globals
- */
-/* Uncomment this function if you have INI entries
-static void php_rsvg_init_globals(zend_rsvg_globals *rsvg_globals)
-{
-	rsvg_globals->global_value = 0;
-	rsvg_globals->global_string = NULL;
-}
-*/
-/* }}} */
-
 /* {{{ PHP_MINIT_FUNCTION
  */
 PHP_MINIT_FUNCTION(rsvg)
 {
+    memcpy(&rsvg_std_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
+    rsvg_std_object_handlers.clone_obj = NULL;
+
+	zend_class_entry exception_ce;
+	INIT_CLASS_ENTRY(exception_ce, "RsvgException", NULL);
+	rsvg_ce_rsvgexception = zend_register_internal_class_ex(&exception_ce, zend_exception_get_default(TSRMLS_C), "Exception" TSRMLS_CC);
+
 	PHP_MINIT(rsvg_handle)(INIT_FUNC_ARGS_PASSTHRU);
 
 	return SUCCESS;
