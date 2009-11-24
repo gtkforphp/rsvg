@@ -114,18 +114,21 @@ PHP_METHOD(Rsvg, __construct)
 
 /* {{{ proto boolean RsvgHandle::render(CairoContext $cr, [string $id])
        proto boolean rsvg_render(CairoContext $cr, [string $id])
- 	   Render the SVG data to a Cairo context */
+ 	   Render the SVG data to a Cairo context. Passing an id of an 
+	   element in the SVG will render only that element. */
 PHP_FUNCTION(rsvg_render)
 {
 	zval *handle_zval, *context_zval;
 	rsvg_handle_object *handle_object;
 	cairo_context_object *context_object;
 	zend_class_entry *cairo_ce_cairocontext;
+	char *id = NULL;
+	long id_len;
 	int result;
 
 	cairo_ce_cairocontext = php_cairo_get_context_ce();
 	PHP_RSVG_ERROR_HANDLING(FALSE)
-	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OO", &handle_zval, rsvg_ce_rsvg, &context_zval, cairo_ce_cairocontext) == FAILURE) {
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OO|s", &handle_zval, rsvg_ce_rsvg, &context_zval, cairo_ce_cairocontext, &id, &id_len) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(FALSE)
 		return;
 	}
@@ -134,7 +137,12 @@ PHP_FUNCTION(rsvg_render)
 	handle_object = (rsvg_handle_object *)zend_object_store_get_object(handle_zval TSRMLS_CC);
 	context_object = (cairo_context_object *)zend_object_store_get_object(context_zval TSRMLS_CC);
 
-	result = rsvg_handle_render_cairo(handle_object->handle, context_object->context);
+	if(id == NULL) {
+		result = rsvg_handle_render_cairo(handle_object->handle, context_object->context);
+	} else {
+		result = rsvg_handle_render_cairo_sub(handle_object->handle, context_object->context, (const char*)id);
+	}
+
 	RETURN_BOOL(result);
 }
 
