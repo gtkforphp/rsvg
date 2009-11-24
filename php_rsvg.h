@@ -57,6 +57,9 @@ PHP_MINIT_FUNCTION(rsvg);
 PHP_MSHUTDOWN_FUNCTION(rsvg);
 PHP_MINFO_FUNCTION(rsvg);
 
+PHP_FUNCTION(rsvg_create);
+PHP_FUNCTION(rsvg_render);
+
 #ifdef ZTS
 #define RSVG_G(v) TSRMG(rsvg_globals_id, zend_rsvg_globals *, v)
 #else

@@ -31,6 +31,46 @@ zend_object_handlers rsvg_std_object_handlers;
 
 zend_class_entry *rsvg_ce_rsvg;
 
+/* {{{ proto rsvg_create(string data)
+       Create a new Rsvg object from SVG data */
+PHP_FUNCTION(rsvg_create)
+{
+	rsvg_handle_object *handle_object = NULL;
+	zval *data_zval = NULL;
+	const char *data;
+	long data_len;
+	GError *error = NULL;
+	
+	PHP_RSVG_ERROR_HANDLING(TRUE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(TRUE)
+		return;
+	}
+
+	PHP_RSVG_RESTORE_ERRORS(TRUE)
+	if(data_len == 0) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "No SVG data supplied", 0 TSRMLS_CC);
+		return;
+	}
+
+	object_init_ex(return_value, rsvg_ce_rsvg);
+	handle_object = (rsvg_handle_object *)zend_object_store_get_object(return_value TSRMLS_CC);
+	rsvg_init();
+	handle_object->handle = rsvg_handle_new_from_data(data, data_len, &error);
+
+	if(error != NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, error->message, error->code TSRMLS_CC);
+		g_error_free(error);
+		return;
+	}
+
+	if(handle_object->handle == NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "Could not create the RSVG object", 0 TSRMLS_CC);
+		return;
+	}
+
+}
+/* }}} */
 
 /* {{{ proto Rsvg::__construct(string data)
        Create a new Rsvg object from SVG data */
@@ -98,7 +138,6 @@ PHP_FUNCTION(rsvg_render)
 	RETURN_BOOL(result);
 }
 
-
 /* {{{ Object creation/destruction functions */
 static void rsvg_object_destroy(void *object TSRMLS_DC)
 {
@@ -142,7 +181,7 @@ const zend_function_entry rsvg_methods[] = {
 
 /* {{{ rsvg_functions[] */
 const zend_function_entry rsvg_functions[] = {
-/*	PHP_FE(rsvg_new, NULL) */
+	PHP_FE(rsvg_create, NULL)
 	PHP_FE(rsvg_render, NULL)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
