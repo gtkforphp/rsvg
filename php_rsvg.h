@@ -94,6 +94,8 @@ PHP_MINFO_FUNCTION(rsvg);
 
 PHP_FUNCTION(rsvg_create);
 PHP_FUNCTION(rsvg_get_dimensions);
+PHP_FUNCTION(rsvg_get_title);
+PHP_FUNCTION(rsvg_get_description);
 PHP_FUNCTION(rsvg_render);
 
 /* {{{ object fetch functions - check for internal RsvgHandle */

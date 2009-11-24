@@ -145,6 +145,60 @@ PHP_FUNCTION(rsvg_get_dimensions)
 
 /* }}} */
 
+/* {{{ proto array Rsvg::getTitle([string element])
+       proto array rsvg_get_title([string element])
+	   Get the SVG's title */
+PHP_FUNCTION(rsvg_get_title)
+{
+	zval *rsvg_zval;
+	rsvg_handle_object *handle_object;
+	char *title = NULL;
+	
+	PHP_RSVG_ERROR_HANDLING(FALSE)
+	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O", &rsvg_zval, rsvg_ce_rsvg) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(FALSE)
+		return;
+	}
+	PHP_RSVG_RESTORE_ERRORS(FALSE)
+
+	handle_object = rsvg_handle_object_get(rsvg_zval TSRMLS_CC);
+
+	title = (char *)rsvg_handle_get_title(handle_object->handle);
+
+	if(title != NULL) {
+		RETURN_STRING(title, 1);
+	} 
+}
+
+/* }}} */
+
+/* {{{ proto array Rsvg::getDescription([string element])
+       proto array rsvg_get_description([string element])
+	   Get the SVG's description */
+PHP_FUNCTION(rsvg_get_description)
+{
+	zval *rsvg_zval;
+	rsvg_handle_object *handle_object;
+	char *desc = NULL;
+	
+	PHP_RSVG_ERROR_HANDLING(FALSE)
+	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O", &rsvg_zval, rsvg_ce_rsvg) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(FALSE)
+		return;
+	}
+	PHP_RSVG_RESTORE_ERRORS(FALSE)
+
+	handle_object = rsvg_handle_object_get(rsvg_zval TSRMLS_CC);
+
+	desc = (char *)rsvg_handle_get_desc(handle_object->handle);
+
+	if(desc != NULL) {
+		RETURN_STRING(desc, 1);
+	} 
+}
+
+/* }}} */
+
 /* {{{ proto boolean Rsvg::render(CairoContext $cr, [string $id])
        proto boolean rsvg_render(CairoContext $cr, [string $id])
  	   Render the SVG data to a Cairo context. Passing an id of an 
@@ -180,7 +234,6 @@ PHP_FUNCTION(rsvg_render)
 }
 
 /* }}} */
-
 
 /* {{{ Object creation/destruction functions */
 static void rsvg_object_destroy(void *object TSRMLS_DC)
@@ -219,6 +272,8 @@ static zend_object_value rsvg_object_new(zend_class_entry *ce TSRMLS_DC)
 const zend_function_entry rsvg_methods[] = {
 	PHP_ME(Rsvg, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
 	PHP_ME_MAPPING(getDimensions, rsvg_get_dimensions, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME_MAPPING(getTitle, rsvg_get_title, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME_MAPPING(getDescription, rsvg_get_description, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME_MAPPING(render, rsvg_render, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
@@ -228,6 +283,8 @@ const zend_function_entry rsvg_methods[] = {
 const zend_function_entry rsvg_functions[] = {
 	PHP_FE(rsvg_create, NULL)
 	PHP_FE(rsvg_get_dimensions, NULL)
+	PHP_FE(rsvg_get_title, NULL)
+	PHP_FE(rsvg_get_description, NULL)
 	PHP_FE(rsvg_render, NULL)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
