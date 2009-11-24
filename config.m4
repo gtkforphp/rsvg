@@ -23,7 +23,7 @@ if test "$PHP_RSVG" != "no"; then
   PHP_SUBST(RSVG_SHARED_LIBADD)
   AC_DEFINE(HAVE_RSVG, 1, [ ])
 
-  PHP_NEW_EXTENSION(rsvg, rsvg.c rsvg_handle.c, $ext_shared)
+  PHP_NEW_EXTENSION(rsvg, rsvg.c, $ext_shared)
 
   EXT_RSVG_HEADERS="php_rsvg_api.h"
 

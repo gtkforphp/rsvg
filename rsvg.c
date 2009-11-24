@@ -29,11 +29,121 @@
 
 zend_object_handlers rsvg_std_object_handlers;
 
-/* {{{ rsvg_functions[]
- *
- * Every user visible function must have an entry in rsvg_functions[].
- */
+zend_class_entry *rsvg_ce_rsvg;
+
+
+/* {{{ proto Rsvg::__construct(string data)
+       Create a new Rsvg object from SVG data */
+PHP_METHOD(Rsvg, __construct)
+{
+	rsvg_handle_object *handle_object = NULL;
+	zval *data_zval = NULL;
+	const char *data;
+	long data_len;
+	GError *error = NULL;
+	
+	PHP_RSVG_ERROR_HANDLING(TRUE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(TRUE)
+		return;
+	}
+
+	PHP_RSVG_RESTORE_ERRORS(TRUE)
+	if(data_len == 0) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "No SVG data supplied", 0 TSRMLS_CC);
+		return;
+	}
+
+	handle_object = (rsvg_handle_object *)zend_object_store_get_object(getThis() TSRMLS_CC);
+	rsvg_init();
+	handle_object->handle = rsvg_handle_new_from_data(data, data_len, &error);
+
+	if(error != NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, error->message, error->code TSRMLS_CC);
+		g_error_free(error);
+		return;
+	}
+
+	if(handle_object->handle == NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "Could not create the RSVG object", 0 TSRMLS_CC);
+		return;
+	}
+
+}
+/* }}} */
+
+/* {{{ proto boolean RsvgHandle::render(CairoContext $cr, [string $id])
+       proto boolean rsvg_render(CairoContext $cr, [string $id])
+ 	   Render the SVG data to a Cairo context */
+PHP_FUNCTION(rsvg_render)
+{
+	zval *handle_zval, *context_zval;
+	rsvg_handle_object *handle_object;
+	cairo_context_object *context_object;
+	zend_class_entry *cairo_ce_cairocontext;
+	int result;
+
+	cairo_ce_cairocontext = php_cairo_get_context_ce();
+	PHP_RSVG_ERROR_HANDLING(FALSE)
+	if (zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "OO", &handle_zval, rsvg_ce_rsvg, &context_zval, cairo_ce_cairocontext) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(FALSE)
+		return;
+	}
+	PHP_RSVG_RESTORE_ERRORS(FALSE)
+
+	handle_object = (rsvg_handle_object *)zend_object_store_get_object(handle_zval TSRMLS_CC);
+	context_object = (cairo_context_object *)zend_object_store_get_object(context_zval TSRMLS_CC);
+
+	result = rsvg_handle_render_cairo(handle_object->handle, context_object->context);
+	RETURN_BOOL(result);
+}
+
+
+/* {{{ Object creation/destruction functions */
+static void rsvg_object_destroy(void *object TSRMLS_DC)
+{
+    rsvg_handle_object *handle = (rsvg_handle_object *)object;
+    zend_hash_destroy(handle->std.properties);
+    FREE_HASHTABLE(handle->std.properties);
+
+    if(handle->handle){
+        g_object_unref(handle->handle);
+    }    
+    efree(object);
+}
+
+static zend_object_value rsvg_object_new(zend_class_entry *ce TSRMLS_DC)
+{
+    zend_object_value retval;
+    rsvg_handle_object *handle;
+    zval *temp;
+
+    handle = ecalloc(1, sizeof(rsvg_handle_object));
+
+    handle->std.ce = ce;
+    handle->handle = NULL;
+
+    ALLOC_HASHTABLE(handle->std.properties);
+    zend_hash_init(handle->std.properties, 0, NULL, ZVAL_PTR_DTOR, 0);
+    zend_hash_copy(handle->std.properties, &ce->default_properties, (copy_ctor_func_t) zval_add_ref,(void *) &temp, sizeof(zval *));
+    retval.handle = zend_objects_store_put(handle, NULL, (zend_objects_free_object_storage_t)rsvg_object_destroy, NULL TSRMLS_CC);
+    retval.handlers = &rsvg_std_object_handlers;
+    return retval;
+}
+/* }}} */
+
+/* {{{ rsvg_methods[] */
+const zend_function_entry rsvg_methods[] = {
+	PHP_ME(Rsvg, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME_MAPPING(render, rsvg_render, NULL, ZEND_ACC_PUBLIC)
+	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
+};
+/* }}} */
+
+/* {{{ rsvg_functions[] */
 const zend_function_entry rsvg_functions[] = {
+/*	PHP_FE(rsvg_new, NULL) */
+	PHP_FE(rsvg_render, NULL)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
 /* }}} */
@@ -66,16 +176,22 @@ ZEND_GET_MODULE(rsvg)
  */
 PHP_MINIT_FUNCTION(rsvg)
 {
+    zend_class_entry ce;
+    zend_class_entry direction_ce;
+	zend_class_entry exception_ce;
+
     memcpy(&rsvg_std_object_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     rsvg_std_object_handlers.clone_obj = NULL;
 
-	zend_class_entry exception_ce;
 	INIT_CLASS_ENTRY(exception_ce, "RsvgException", NULL);
 	rsvg_ce_rsvgexception = zend_register_internal_class_ex(&exception_ce, zend_exception_get_default(TSRMLS_C), "Exception" TSRMLS_CC);
 
-	PHP_MINIT(rsvg_handle)(INIT_FUNC_ARGS_PASSTHRU);
 
-	return SUCCESS;
+    INIT_CLASS_ENTRY(ce, "Rsvg", rsvg_methods);
+    rsvg_ce_rsvg = zend_register_internal_class(&ce TSRMLS_CC);
+    rsvg_ce_rsvg->create_object = rsvg_object_new;
+
+    return SUCCESS;
 }
 /* }}} */
 
