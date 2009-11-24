@@ -42,31 +42,11 @@ zend_class_entry *rsvg_ce_rsvgexception;
 #include "TSRM.h"
 #endif
 
-#include <glib.h>
-#include <librsvg/rsvg.h>
-#include <librsvg/rsvg-cairo.h>
-#include "php_cairo_api.h"
-
-typedef struct _rsvg_handle_object {
-	zend_object std;
-	RsvgHandle *handle;
-} rsvg_handle_object;
-
-
-PHP_MINIT_FUNCTION(rsvg);
-PHP_MSHUTDOWN_FUNCTION(rsvg);
-PHP_MINFO_FUNCTION(rsvg);
-
-PHP_FUNCTION(rsvg_create);
-PHP_FUNCTION(rsvg_render);
-
 #ifdef ZTS
 #define RSVG_G(v) TSRMG(rsvg_globals_id, zend_rsvg_globals *, v)
 #else
 #define RSVG_G(v) (rsvg_globals.v)
 #endif
-
-#endif	/* PHP_RSVG_H */
 
 /* turn error handling to exception mode and restore */
 /* Borrowed from pecl/cairo, ta auroraeosrose */
@@ -97,6 +77,38 @@ PHP_FUNCTION(rsvg_render);
 
 #endif
 
+#include <glib.h>
+#include <librsvg/rsvg.h>
+#include <librsvg/rsvg-cairo.h>
+#include "php_cairo_api.h"
+
+typedef struct _rsvg_handle_object {
+	zend_object std;
+	RsvgHandle *handle;
+} rsvg_handle_object;
+
+
+PHP_MINIT_FUNCTION(rsvg);
+PHP_MSHUTDOWN_FUNCTION(rsvg);
+PHP_MINFO_FUNCTION(rsvg);
+
+PHP_FUNCTION(rsvg_create);
+PHP_FUNCTION(rsvg_get_dimensions);
+PHP_FUNCTION(rsvg_render);
+
+/* {{{ object fetch functions - check for internal RsvgHandle */
+static inline rsvg_handle_object* rsvg_handle_object_get(zval *zobj TSRMLS_DC)
+{
+    rsvg_handle_object *pobj = zend_object_store_get_object(zobj TSRMLS_CC);
+    if (pobj->handle == NULL) {
+		php_error(E_ERROR, "Internal context object missing in %s wrapper, you must call parent::__construct in extended classes", Z_OBJCE_P(zobj)->name);
+    }
+    return pobj;
+}
+/* }}} */
+
+
+#endif	/* PHP_RSVG_H */
 
 /*
  * Local variables:

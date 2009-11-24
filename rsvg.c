@@ -12,11 +12,9 @@
   | obtain it through the world-wide-web, please send a note to          |
   | license@php.net so we can mail you a copy immediately.               |
   +----------------------------------------------------------------------+
-  | Author:                                                              |
+  | Author: Michael Maclean <mgdm@php.net>                               |
   +----------------------------------------------------------------------+
 */
-
-/* $Id: header 252479 2008-02-07 19:39:50Z iliaa $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -112,7 +110,42 @@ PHP_METHOD(Rsvg, __construct)
 }
 /* }}} */
 
-/* {{{ proto boolean RsvgHandle::render(CairoContext $cr, [string $id])
+/* {{{ proto array Rsvg::getDimensions([string element])
+       proto array rsvg_get_dimensions([string element])
+	   Get the dimensions of an SVG. Pass an element ID to get that element's size. */
+PHP_FUNCTION(rsvg_get_dimensions)
+{
+	zval *rsvg_zval;
+	rsvg_handle_object *handle_object;
+	RsvgDimensionData dimension_data;
+	char *id = NULL;
+	long id_len;
+	
+	PHP_RSVG_ERROR_HANDLING(FALSE)
+	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O|s", &rsvg_zval, rsvg_ce_rsvg, &id, &id_len) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(FALSE)
+		return;
+	}
+	PHP_RSVG_RESTORE_ERRORS(FALSE)
+
+	handle_object = rsvg_handle_object_get(rsvg_zval TSRMLS_CC);
+
+	if(id == NULL) {
+		rsvg_handle_get_dimensions(handle_object->handle, &dimension_data);
+	} else {
+		rsvg_handle_get_dimensions_sub(handle_object->handle, &dimension_data, (const char *)id);
+	}
+
+	array_init(return_value);
+	add_assoc_long(return_value, "width", dimension_data.width);
+	add_assoc_long(return_value, "height", dimension_data.height);
+	add_assoc_double(return_value, "em", dimension_data.em);
+	add_assoc_double(return_value, "ex", dimension_data.ex);
+}
+
+/* }}} */
+
+/* {{{ proto boolean Rsvg::render(CairoContext $cr, [string $id])
        proto boolean rsvg_render(CairoContext $cr, [string $id])
  	   Render the SVG data to a Cairo context. Passing an id of an 
 	   element in the SVG will render only that element. */
@@ -145,6 +178,9 @@ PHP_FUNCTION(rsvg_render)
 
 	RETURN_BOOL(result);
 }
+
+/* }}} */
+
 
 /* {{{ Object creation/destruction functions */
 static void rsvg_object_destroy(void *object TSRMLS_DC)
@@ -182,6 +218,7 @@ static zend_object_value rsvg_object_new(zend_class_entry *ce TSRMLS_DC)
 /* {{{ rsvg_methods[] */
 const zend_function_entry rsvg_methods[] = {
 	PHP_ME(Rsvg, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME_MAPPING(getDimensions, rsvg_get_dimensions, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME_MAPPING(render, rsvg_render, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
@@ -190,6 +227,7 @@ const zend_function_entry rsvg_methods[] = {
 /* {{{ rsvg_functions[] */
 const zend_function_entry rsvg_functions[] = {
 	PHP_FE(rsvg_create, NULL)
+	PHP_FE(rsvg_get_dimensions, NULL)
 	PHP_FE(rsvg_render, NULL)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
