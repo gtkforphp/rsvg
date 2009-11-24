@@ -52,7 +52,7 @@ PHP_FUNCTION(rsvg_create)
 	}
 
 	object_init_ex(return_value, rsvg_ce_rsvg);
-	handle_object = (rsvg_handle_object *)zend_object_store_get_object(return_value TSRMLS_CC);
+	handle_object = (rsvg_handle_object *)rsvg_handle_object_get(return_value TSRMLS_CC);
 	rsvg_init();
 	handle_object->handle = rsvg_handle_new_from_data(data, data_len, &error);
 
@@ -221,8 +221,8 @@ PHP_FUNCTION(rsvg_render)
 	}
 	PHP_RSVG_RESTORE_ERRORS(FALSE)
 
-	handle_object = (rsvg_handle_object *)zend_object_store_get_object(handle_zval TSRMLS_CC);
-	context_object = (cairo_context_object *)zend_object_store_get_object(context_zval TSRMLS_CC);
+	handle_object = (rsvg_handle_object *)rsvg_handle_object_get(handle_zval TSRMLS_CC);
+	context_object = (cairo_context_object *)cairo_context_object_get(context_zval TSRMLS_CC);
 
 	if(id == NULL) {
 		result = rsvg_handle_render_cairo(handle_object->handle, context_object->context);
