@@ -199,6 +199,29 @@ PHP_FUNCTION(rsvg_get_description)
 
 /* }}} */
 
+/* {{{ proto array Rsvg::hasElement(string element)
+	   proto array rsvg_has_element(string element)
+	   Checks whether the element id exists in the SVG document. */
+PHP_FUNCTION(rsvg_has_element)
+{
+	zval *rsvg_zval;
+	rsvg_handle_object *handle_object;
+	char *id = NULL;
+	long id_len;
+	
+	PHP_RSVG_ERROR_HANDLING(FALSE)
+	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &rsvg_zval, rsvg_ce_rsvg, &id, &id_len) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(FALSE)
+		return;
+	}
+	PHP_RSVG_RESTORE_ERRORS(FALSE)
+
+	handle_object = rsvg_handle_object_get(rsvg_zval TSRMLS_CC);
+	RETURN_BOOL(rsvg_handle_has_sub(handle_object->handle, (const char*)id));	
+}
+
+/* }}} */
+
 /* {{{ proto boolean Rsvg::render(CairoContext $cr, [string $id])
        proto boolean rsvg_render(CairoContext $cr, [string $id])
  	   Render the SVG data to a Cairo context. Passing an id of an 
@@ -274,6 +297,7 @@ const zend_function_entry rsvg_methods[] = {
 	PHP_ME_MAPPING(getDimensions, rsvg_get_dimensions, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME_MAPPING(getTitle, rsvg_get_title, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME_MAPPING(getDescription, rsvg_get_description, NULL, ZEND_ACC_PUBLIC)
+	PHP_ME_MAPPING(hasElement, rsvg_has_element, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME_MAPPING(render, rsvg_render, NULL, ZEND_ACC_PUBLIC)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
@@ -285,6 +309,7 @@ const zend_function_entry rsvg_functions[] = {
 	PHP_FE(rsvg_get_dimensions, NULL)
 	PHP_FE(rsvg_get_title, NULL)
 	PHP_FE(rsvg_get_description, NULL)
+	PHP_FE(rsvg_has_element, NULL)
 	PHP_FE(rsvg_render, NULL)
 	{NULL, NULL, NULL}	/* Must be the last line in rsvg_functions[] */
 };
