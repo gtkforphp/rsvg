@@ -93,6 +93,7 @@ PHP_MSHUTDOWN_FUNCTION(rsvg);
 PHP_MINFO_FUNCTION(rsvg);
 
 PHP_FUNCTION(rsvg_create);
+PHP_FUNCTION(rsvg_create_from_file);
 PHP_FUNCTION(rsvg_get_dimensions);
 PHP_FUNCTION(rsvg_get_title);
 PHP_FUNCTION(rsvg_get_description);

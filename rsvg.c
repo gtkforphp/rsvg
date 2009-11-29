@@ -110,6 +110,109 @@ PHP_METHOD(Rsvg, __construct)
 }
 /* }}} */
 
+/* {{{ proto Rsvg::createFromFile(string|resource file)
+       Create a new Rsvg object from SVG data from a file */
+PHP_METHOD(Rsvg, createFromFile)
+{
+	rsvg_handle_object *handle_object = NULL;
+	zval *stream_zval = NULL;
+	GError *error = NULL;
+	php_stream *stream;
+	zend_bool owned_stream = 0;
+	char *data = NULL;
+	long data_len;
+	
+	PHP_RSVG_ERROR_HANDLING(TRUE)
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &stream_zval) == FAILURE) {
+		PHP_RSVG_RESTORE_ERRORS(TRUE)
+		return;
+	}
+	PHP_RSVG_RESTORE_ERRORS(TRUE)
+	
+	object_init_ex(return_value, rsvg_ce_rsvg);
+	handle_object = (rsvg_handle_object *)zend_object_store_get_object(return_value TSRMLS_CC);
+
+	if(Z_TYPE_P(stream_zval) == IS_STRING) {
+		stream = php_stream_open_wrapper(Z_STRVAL_P(stream_zval), "rb", REPORT_ERRORS|ENFORCE_SAFE_MODE, NULL);
+		owned_stream = 1;
+	} else if(Z_TYPE_P(stream_zval) == IS_RESOURCE) {
+		php_stream_from_zval(stream, &stream_zval);
+	} else {
+		zend_throw_exception(rsvg_ce_rsvgexception, "Rsvg::createFromFile expects parameter 1 to be a string or a stream resource", 0 TSRMLS_CC);
+		return;
+	}
+
+	data_len = php_stream_copy_to_mem(stream, &data, PHP_STREAM_COPY_ALL, 0);
+
+	rsvg_init();
+	handle_object->handle = rsvg_handle_new_from_data(data, data_len, &error);
+	efree(data);
+
+	if(owned_stream) {
+		php_stream_close(stream);
+	}
+	
+	if(error != NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, error->message, error->code TSRMLS_CC);
+		g_error_free(error);
+		return;
+	}
+
+	if(handle_object->handle == NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "Could not create the RSVG object", 0 TSRMLS_CC);
+		return;
+	}
+}
+/* }}} */
+
+/* {{{ proto rsvg_create_from_file(string|resource file)
+       Create a new Rsvg object from SVG data from a file */
+PHP_FUNCTION(rsvg_create_from_file)
+{
+	rsvg_handle_object *handle_object = NULL;
+	zval *stream_zval = NULL;
+	GError *error = NULL;
+	php_stream *stream;
+	zend_bool owned_stream = 0;
+	char *data = NULL;
+	long data_len;
+	
+	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &stream_zval) == FAILURE) {
+		return;
+	}
+	
+	object_init_ex(return_value, rsvg_ce_rsvg);
+	handle_object = (rsvg_handle_object *)zend_object_store_get_object(return_value TSRMLS_CC);
+
+	if(Z_TYPE_P(stream_zval) == IS_STRING) {
+		stream = php_stream_open_wrapper(Z_STRVAL_P(stream_zval), "rb", REPORT_ERRORS|ENFORCE_SAFE_MODE, NULL);
+		owned_stream = 1;
+	} else if(Z_TYPE_P(stream_zval) == IS_RESOURCE) {
+		php_stream_from_zval(stream, &stream_zval);
+	} else {
+		zend_error(E_WARNING, "Rsvg::createFromFile expects parameter 1 to be a string or a stream resource");
+		RETURN_NULL();
+	}
+
+	data_len = php_stream_copy_to_mem(stream, &data, PHP_STREAM_COPY_ALL, 0);
+
+	rsvg_init();
+	handle_object->handle = rsvg_handle_new_from_data(data, data_len, &error);
+	efree(data);
+
+	if(error != NULL) {
+		zend_error(E_WARNING, "%s", error->message);
+		g_error_free(error);
+		RETURN_NULL();
+	}
+
+	if(handle_object->handle == NULL) {
+		zend_throw_exception(rsvg_ce_rsvgexception, "Could not create the RSVG object", 0 TSRMLS_CC);
+		RETURN_NULL();
+	}
+}
+/* }}} */
+
 /* {{{ proto array Rsvg::getDimensions([string element])
        proto array rsvg_get_dimensions([string element])
 	   Get the dimensions of an SVG. Pass an element ID to get that element's size. */
@@ -294,6 +397,7 @@ static zend_object_value rsvg_object_new(zend_class_entry *ce TSRMLS_DC)
 /* {{{ rsvg_methods[] */
 const zend_function_entry rsvg_methods[] = {
 	PHP_ME(Rsvg, __construct, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_CTOR)
+	PHP_ME(Rsvg, createFromFile, NULL, ZEND_ACC_PUBLIC|ZEND_ACC_STATIC)
 	PHP_ME_MAPPING(getDimensions, rsvg_get_dimensions, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME_MAPPING(getTitle, rsvg_get_title, NULL, ZEND_ACC_PUBLIC)
 	PHP_ME_MAPPING(getDescription, rsvg_get_description, NULL, ZEND_ACC_PUBLIC)
@@ -306,6 +410,7 @@ const zend_function_entry rsvg_methods[] = {
 /* {{{ rsvg_functions[] */
 const zend_function_entry rsvg_functions[] = {
 	PHP_FE(rsvg_create, NULL)
+	PHP_FE(rsvg_create_from_file, NULL)
 	PHP_FE(rsvg_get_dimensions, NULL)
 	PHP_FE(rsvg_get_title, NULL)
 	PHP_FE(rsvg_get_description, NULL)
