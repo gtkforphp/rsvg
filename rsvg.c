@@ -38,7 +38,7 @@ PHP_FUNCTION(rsvg_create)
 	const char *data;
 	long data_len;
 	GError *error = NULL;
-	
+
 	PHP_RSVG_ERROR_HANDLING(TRUE)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(TRUE)
@@ -79,7 +79,7 @@ PHP_METHOD(Rsvg, __construct)
 	const char *data;
 	long data_len;
 	GError *error = NULL;
-	
+
 	PHP_RSVG_ERROR_HANDLING(TRUE)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "s", &data, &data_len) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(TRUE)
@@ -121,14 +121,14 @@ PHP_METHOD(Rsvg, createFromFile)
 	zend_bool owned_stream = 0;
 	char *data = NULL;
 	long data_len;
-	
+
 	PHP_RSVG_ERROR_HANDLING(TRUE)
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &stream_zval) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(TRUE)
 		return;
 	}
 	PHP_RSVG_RESTORE_ERRORS(TRUE)
-	
+
 	object_init_ex(return_value, rsvg_ce_rsvg);
 	handle_object = (rsvg_handle_object *)zend_object_store_get_object(return_value TSRMLS_CC);
 
@@ -151,7 +151,7 @@ PHP_METHOD(Rsvg, createFromFile)
 	if(owned_stream) {
 		php_stream_close(stream);
 	}
-	
+
 	if(error != NULL) {
 		zend_throw_exception(rsvg_ce_rsvgexception, error->message, error->code TSRMLS_CC);
 		g_error_free(error);
@@ -176,11 +176,11 @@ PHP_FUNCTION(rsvg_create_from_file)
 	zend_bool owned_stream = 0;
 	char *data = NULL;
 	long data_len;
-	
+
 	if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "z", &stream_zval) == FAILURE) {
 		return;
 	}
-	
+
 	object_init_ex(return_value, rsvg_ce_rsvg);
 	handle_object = (rsvg_handle_object *)zend_object_store_get_object(return_value TSRMLS_CC);
 
@@ -223,7 +223,7 @@ PHP_FUNCTION(rsvg_get_dimensions)
 	RsvgDimensionData dimension_data;
 	char *id = NULL;
 	long id_len;
-	
+
 	PHP_RSVG_ERROR_HANDLING(FALSE)
 	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O|s", &rsvg_zval, rsvg_ce_rsvg, &id, &id_len) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(FALSE)
@@ -256,7 +256,7 @@ PHP_FUNCTION(rsvg_get_title)
 	zval *rsvg_zval;
 	rsvg_handle_object *handle_object;
 	char *title = NULL;
-	
+
 	PHP_RSVG_ERROR_HANDLING(FALSE)
 	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O", &rsvg_zval, rsvg_ce_rsvg) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(FALSE)
@@ -270,7 +270,7 @@ PHP_FUNCTION(rsvg_get_title)
 
 	if(title != NULL) {
 		RETURN_STRING(title, 1);
-	} 
+	}
 }
 
 /* }}} */
@@ -283,7 +283,7 @@ PHP_FUNCTION(rsvg_get_description)
 	zval *rsvg_zval;
 	rsvg_handle_object *handle_object;
 	char *desc = NULL;
-	
+
 	PHP_RSVG_ERROR_HANDLING(FALSE)
 	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "O", &rsvg_zval, rsvg_ce_rsvg) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(FALSE)
@@ -297,7 +297,7 @@ PHP_FUNCTION(rsvg_get_description)
 
 	if(desc != NULL) {
 		RETURN_STRING(desc, 1);
-	} 
+	}
 }
 
 /* }}} */
@@ -311,7 +311,7 @@ PHP_FUNCTION(rsvg_has_element)
 	rsvg_handle_object *handle_object;
 	char *id = NULL;
 	long id_len;
-	
+
 	PHP_RSVG_ERROR_HANDLING(FALSE)
 	if(zend_parse_method_parameters(ZEND_NUM_ARGS() TSRMLS_CC, getThis(), "Os", &rsvg_zval, rsvg_ce_rsvg, &id, &id_len) == FAILURE) {
 		PHP_RSVG_RESTORE_ERRORS(FALSE)
@@ -320,14 +320,14 @@ PHP_FUNCTION(rsvg_has_element)
 	PHP_RSVG_RESTORE_ERRORS(FALSE)
 
 	handle_object = rsvg_handle_object_get(rsvg_zval TSRMLS_CC);
-	RETURN_BOOL(rsvg_handle_has_sub(handle_object->handle, (const char*)id));	
+	RETURN_BOOL(rsvg_handle_has_sub(handle_object->handle, (const char*)id));
 }
 
 /* }}} */
 
 /* {{{ proto boolean Rsvg::render(CairoContext $cr, [string $id])
        proto boolean rsvg_render(CairoContext $cr, [string $id])
- 	   Render the SVG data to a Cairo context. Passing an id of an 
+ 	   Render the SVG data to a Cairo context. Passing an id of an
 	   element in the SVG will render only that element. */
 PHP_FUNCTION(rsvg_render)
 {
@@ -370,7 +370,7 @@ static void rsvg_object_destroy(void *object TSRMLS_DC)
 
     if(handle->handle){
         g_object_unref(handle->handle);
-    }    
+    }
     efree(object);
 }
 
